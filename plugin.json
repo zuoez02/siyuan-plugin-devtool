@@ -1,0 +1,15 @@
+{
+    "name": "siyuan-plugin-devtool",
+    "author": "zuoez02",
+    "url": "https://github.com/zuoez02/siyuan-plugin-devtools",
+    "version": "0.1.0",
+    "displayName": {
+        "default": "Developer Tools"
+    },
+    "description": {
+        "default": "思源开发者工具集合"
+    },
+    "readme": {
+        "default": "README.md"
+    }
+}
