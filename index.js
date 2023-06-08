@@ -47,20 +47,17 @@ class VersionManager {
         await this.getResources();
     }
 
-    getUserRepos(username) {
-        const result = [];
-        for (const p of[...this.plugins, ...this.templates, ...this.themes, ...this.widgets]) {
+    getUserRepos() {
+        return [...this.plugins, ...this.templates, ...this.themes, ...this.widgets].map((p) => {
             const reponame = p.url.split('@')[0];
             const author = reponame.split('/')[0];
-            if (!username || author.trim().toLowerCase() === username.trim().toLowerCase()) {
-                result.push({
-                    ...p,
-                    type: p.type,
-                    downloads: this.downloadCounts[reponame].downloads,
-                });
+            return {
+                ...p,
+                username: author,
+                type: p.type,
+                downloads: this.downloadCounts[reponame].downloads,
             }
-        }
-        return result;
+        });
     }
 
     async getSiyuanVersions() {
@@ -110,6 +107,7 @@ class DevlToolComponent {
 
     addVue() {
         addScriptSync('/plugins/siyuan-plugin-devtool/vue.js', 'vue');
+        addScriptSync('/plugins/siyuan-plugin-devtool/echarts.js', 'echarts');
         const style = document.createElement('style');
         style.innerHTML = `
 <style>
@@ -139,13 +137,60 @@ class DevlToolComponent {
     mountEl() {
         const c = this;
         Vue.createApp({
-            data: () => ({ vm: new VersionManager(), username: c.username || '', tempUsername: c.username || '', userRepos: [] }),
-            async created() {
+            data: () => {
+                return {
+                    vm: new VersionManager(),
+                    echart: null,
+                    username: c.username || '',
+                    tempUsername: c.username || '',
+                    userRepos: [],
+                    selectedRankType: 'all',
+                    types: ['all', 'plugin', 'template', 'widget', 'theme']
+                };
+            },
+            async mounted() {
                 await this.vm.init();
-                const result = await this.vm.getUserRepos(this.username);
-                this.userRepos = result;
+                this.userRepos = await this.vm.getUserRepos();
+                const el = this.$el.querySelector('#echarts');
+                this.echart = echarts.init(el);
+                this.updateEcharts();
             },
             methods: {
+                updateEcharts() {
+                    let repos;
+                    if (this.selectedRankType === 'all') {
+                        repos = this.userRepos;
+                    } else {
+                        repos = this.userRepos.filter((v) => v.type === this.selectedRankType);
+                    }
+                    const total = {};
+                    repos.forEach((p) => {
+                        total[p.username] = total[p.username] ? (total[p.username] + p.downloads) : p.downloads;
+                    });
+                    const entries = Object.entries(total);
+                    const sorted = entries.sort((a, b) => b[1] - a[1]);
+                    const option = {
+                        tooltip: {
+                            show: true,
+                        },
+                        xAxis: {
+                            data: sorted.map(s => s[0]),
+                        },
+                        yAxis: {
+                            show: true,
+                        },
+                        series: [{
+                            name: 'Rank',
+                            type: 'bar',
+                            data: sorted.map(s => s[1]),
+                        }]
+                    };
+                    this.echart.setOption(option)
+                },
+                refresh() {
+                    this.userRepos = this.vm.getUserRepos();
+                    this.updateEcharts();
+                },
                 async update() {
                     c.updateUsername(this.tempUsername);
                     this.username = this.tempUsername;
@@ -167,30 +212,49 @@ class DevlToolComponent {
             },
             computed: {
                 total() {
-                    return this.userRepos.reduce((a, i) => (i.downloads || 0) + a, 0);
+                    return this.namedUserRepos.reduce((a, i) => (i.downloads || 0) + a, 0);
                 },
+                namedUserRepos() {
+                    if (!this.username) {
+                        return this.userRepos;
+                    }
+                    return this.userRepos.filter((v) => v.username === this.username);
+                }
+            },
+            watch: {
+                selectedRankType() {
+                    this.updateEcharts();
+                }
             },
             template: `
             <div class="devtool-plugin-tab" style="padding: 12px">
                 <h1>Developer Tools</h1>
                 <div style="margin: 12px 0 5px">
                     <span>username:</span>
-                    <input v-model="tempUsername"/>
+                    <input v-model="username"/>
                     <button v-on:click="update">Save</button>
                 </div>
                 <div style="display: flex; flex-wrap: wrap;">
                     <h2 style="margin: 12px 0 5px; width: 100%">Repos</h2>
                     <div style="margin: 6px 0; width: 100%">Total Downloads: {{total}}</div>
                     <div class="user-repo-container">
-                        <template v-for="p in userRepos">
+                        <template v-for="p in namedUserRepos">
                             <div class="user-repo">
                                 <div><dt>Name:&nbsp</dt><dd style="display: inline-block"><a :href="p.package.url" target="_blank">{{p.package.name}}</a></dd></div>
+                                <div v-if="!username"><dt>Username:&nbsp</dt><dd style="display: inline-block">{{p.username}}</dd></div>
                                 <div><dt>Type:&nbsp</dt><dd :style="getStyle(p.type)">{{p.type}}</dd></div>
                                 <div><dt>Download:&nbsp</dt><dd style="display: inline-block">{{p.downloads}}</dd></div>
                                 <div><dt>Version:&nbsp</dt><dd style="display: inline-block">{{p.package.version}}</dd></div>
                             </div>
                         </template>
                     </div>
+                </div>
+                <div style="margin: 12px 0 5px">
+                    <h2>Rank</h2>
+                    <div>
+                        <button v-for="t in types" @click="selectedRankType = t">{{t}}</button>
+                    </div>
+                    <div id="echarts" ref="echarts" style="width: 100%; height: 400px"></div>
                 </div>
             </div>
             `
