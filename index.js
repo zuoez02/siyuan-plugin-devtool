@@ -44,55 +44,19 @@ class VersionManager {
     async init() {
         await this.getDownloadCounts();
         await this.getSiyuanVersions();
-        await this.getPlugins();
+        await this.getResources();
     }
 
     getUserRepos(username) {
-        if (!username) {
-            return [];
-        }
         const result = [];
-        for (const p of this.plugins) {
-            if (p.package.author === username) {
-                const reponame = p.url.split('@')[0];
-                const downloads = this.downloadCounts[reponame];
+        for (const p of[...this.plugins, ...this.templates, ...this.themes, ...this.widgets]) {
+            const reponame = p.url.split('@')[0];
+            const author = reponame.split('/')[0];
+            if (!username || author.trim().toLowerCase() === username.trim().toLowerCase()) {
                 result.push({
                     ...p,
-                    type: 'plugin',
-                    downloads: downloads && downloads.downloads,
-                });
-            }
-        }
-        for (const p of this.templates) {
-            if (p.package.author === username) {
-                const reponame = p.url.split('@')[0];
-                const downloads = this.downloadCounts[reponame];
-                result.push({
-                    ...p,
-                    type: 'template',
-                    downloads: downloads && downloads.downloads,
-                });
-            }
-        }
-        for (const p of this.themes) {
-            if (p.package.author === username) {
-                const reponame = p.url.split('@')[0];
-                const downloads = this.downloadCounts[reponame];
-                result.push({
-                    ...p,
-                    type: 'theme',
-                    downloads: downloads && downloads.downloads,
-                });
-            }
-        }
-        for (const p of this.widgets) {
-            if (p.package.author === username) {
-                const reponame = p.url.split('@')[0];
-                const downloads = this.downloadCounts[reponame];
-                result.push({
-                    ...p,
-                    type: 'widget',
-                    downloads: downloads && downloads.downloads,
+                    type: p.type,
+                    downloads: this.downloadCounts[reponame].downloads,
                 });
             }
         }
@@ -104,17 +68,17 @@ class VersionManager {
         this.bazaarHash = this.version.bazaar;
     }
 
-    async getPlugins() {
+    async getResources() {
         return Promise.all([
             fetch(`${Constants.BazaarOSSServer}/bazaar@${this.bazaarHash}/stage/plugins.json`).then((res) => res.json()),
             fetch(`${Constants.BazaarOSSServer}/bazaar@${this.bazaarHash}/stage/templates.json`).then((res) => res.json()),
             fetch(`${Constants.BazaarOSSServer}/bazaar@${this.bazaarHash}/stage/themes.json`).then((res) => res.json()),
             fetch(`${Constants.BazaarOSSServer}/bazaar@${this.bazaarHash}/stage/widgets.json`).then((res) => res.json()),
         ]).then((arr) => {
-            this.plugins = arr[0].repos;
-            this.templates = arr[1].repos;
-            this.themes = arr[2].repos;
-            this.widgets = arr[3].repos;
+            this.plugins = arr[0].repos.map((v) => ({...v, type: 'plugin' }));
+            this.templates = arr[1].repos.map((v) => ({...v, type: 'template' }));
+            this.themes = arr[2].repos.map((v) => ({...v, type: 'theme' }));
+            this.widgets = arr[3].repos.map((v) => ({...v, type: 'widget' }));
         });
     }
 
@@ -157,6 +121,17 @@ class DevlToolComponent {
     font-weight: bold;
     display: inline-block;
 }
+.user-repo-container {
+    margin: 0 -8px;
+}
+.user-repo {
+    margin: 12px 8px;
+    width: 400px;
+    border: 1px solid black;
+    border-radius: 4px;
+    padding: 12px;
+    display: inline-block;
+}
 </style>`
         document.head.append(style);
     }
@@ -174,9 +149,6 @@ class DevlToolComponent {
                 async update() {
                     c.updateUsername(this.tempUsername);
                     this.username = this.tempUsername;
-                    if (!this.username) {
-                        return;
-                    }
                     const result = await this.vm.getUserRepos(this.username);
                     this.userRepos = result;
                 },
@@ -206,17 +178,19 @@ class DevlToolComponent {
                     <input v-model="tempUsername"/>
                     <button v-on:click="update">Save</button>
                 </div>
-                <div v-if="username" style="display: flex; flex-wrap: wrap;">
+                <div style="display: flex; flex-wrap: wrap;">
                     <h2 style="margin: 12px 0 5px; width: 100%">Repos</h2>
                     <div style="margin: 6px 0; width: 100%">Total Downloads: {{total}}</div>
-                    <template v-for="p in userRepos">
-                        <div v-if="p.package.author === username" style="margin: 8px 0; width: 50%">
-                            <div><dt>Name:&nbsp</dt><dd style="display: inline-block"><a :href="p.package.url" target="_blank">{{p.package.name}}</a></dd></div>
-                            <div><dt>Type:&nbsp</dt><dd :style="getStyle(p.type)">{{p.type}}</dd></div>
-                            <div><dt>Download:&nbsp</dt><dd style="display: inline-block">{{p.downloads}}</dd></div>
-                            <div><dt>Version:&nbsp</dt><dd style="display: inline-block">{{p.package.version}}</dd></div>
-                        </div>
-                    </template>
+                    <div class="user-repo-container">
+                        <template v-for="p in userRepos">
+                            <div class="user-repo">
+                                <div><dt>Name:&nbsp</dt><dd style="display: inline-block"><a :href="p.package.url" target="_blank">{{p.package.name}}</a></dd></div>
+                                <div><dt>Type:&nbsp</dt><dd :style="getStyle(p.type)">{{p.type}}</dd></div>
+                                <div><dt>Download:&nbsp</dt><dd style="display: inline-block">{{p.downloads}}</dd></div>
+                                <div><dt>Version:&nbsp</dt><dd style="display: inline-block">{{p.package.version}}</dd></div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
             `
