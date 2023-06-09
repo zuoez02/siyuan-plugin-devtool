@@ -1,4 +1,4 @@
-const { Plugin, openTab } = require('siyuan');
+const { Plugin, openTab, Menu } = require('siyuan');
 
 const version = window.siyuan.config.system.kernelVersion;
 
@@ -271,13 +271,37 @@ module.exports = class OpenMd extends Plugin {
     }
 
     registerTopbarIcon() {
-        this.addTopBar({
+        const topBarElement = this.addTopBar({
             title: 'Siyuan开发者工具',
             icon: 'iconBug',
             position: 'right',
             callback: () => {
-                this.showDevTool();
+                let rect = topBarElement.getBoundingClientRect();
+                // 如果被隐藏，则使用更多按钮
+                if (rect.width === 0) {
+                    rect = document.querySelector("#barMore").getBoundingClientRect();
+                }
+                this.showMenu(rect);
             },
+        });
+    }
+
+    showMenu(rect) {
+        const menu = new Menu("siyuanPluginDevtool");
+        menu.addItem({
+            icon: "iconRefresh",
+            label: "重载",
+            click: () => window.location.reload(),
+        });
+        menu.addItem({
+            icon: "iconBug",
+            label: "开发者工具",
+            click: () => this.showDevTool(),
+        });
+        menu.open({
+            x: rect.right,
+            y: rect.bottom,
+            isLeft: true,
         });
     }
 
