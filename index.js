@@ -108,30 +108,6 @@ class DevlToolComponent {
     addVue() {
         addScriptSync('/plugins/siyuan-plugin-devtool/vue.js', 'vue');
         addScriptSync('/plugins/siyuan-plugin-devtool/echarts.js', 'echarts');
-        const style = document.createElement('style');
-        style.innerHTML = `
-<style>
-.devtool-plugin-tab dd {
-    display: inline-block;
-    color: red;
-}
-.devtool-plugin-tab dt {
-    font-weight: bold;
-    display: inline-block;
-}
-.user-repo-container {
-    margin: 0 -8px;
-}
-.user-repo {
-    margin: 12px 8px;
-    width: 400px;
-    border: 1px solid black;
-    border-radius: 4px;
-    padding: 12px;
-    display: inline-block;
-}
-</style>`
-        document.head.append(style);
     }
 
     mountEl() {
@@ -268,6 +244,15 @@ module.exports = class OpenMd extends Plugin {
         this.devtoolComponent = new DevlToolComponent(this);
         this.loadConfig();
         this.registerTopbarIcon();
+
+        this.addCommand({
+            langKey: "reload",
+            hotkey: "⇧⌘R",
+            callback: () => {
+                window.location.reload();
+            }
+        });
+
     }
 
     registerTopbarIcon() {

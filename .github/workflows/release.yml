@@ -16,7 +16,7 @@ jobs:
       - name: Package zip
         uses: vimtor/action-zip@v1
         with:
-          files: icon.png index.js plugin.json preview.png README.md vue.js echarts.js
+          files: icon.png index.js plugin.json preview.png README.md vue.js echarts.js i18n/ index.css
           dest: package.zip
 
       - name: Release

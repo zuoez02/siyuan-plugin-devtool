@@ -1,0 +1,22 @@
+.devtool-plugin-tab {
+    background-color: var(--b3-theme-background);
+}
+
+.devtool-plugin-tab dd {
+    display: inline-block;
+}
+.devtool-plugin-tab dt {
+    font-weight: bold;
+    display: inline-block;
+}
+.user-repo-container {
+    margin: 0 -8px;
+}
+.user-repo {
+    margin: 12px 8px;
+    width: 400px;
+    border: 1px solid var(--b3-theme-background-light);;
+    border-radius: 4px;
+    padding: 12px;
+    display: inline-block;
+}
