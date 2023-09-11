@@ -162,6 +162,9 @@ class DevlToolComponent {
                         }]
                     };
                     this.echart.setOption(option)
+                    this.echart.on('click', (e) => {
+                        this.username = e.name;
+                    })
                 },
                 refresh() {
                     this.userRepos = this.vm.getUserRepos();
@@ -192,9 +195,9 @@ class DevlToolComponent {
                 },
                 namedUserRepos() {
                     if (!this.username) {
-                        return this.userRepos;
+                        return this.userRepos.sort((a, b) => b.downloads - a.downloads);
                     }
-                    return this.userRepos.filter((v) => v.username === this.username);
+                    return this.userRepos.filter((v) => v.username === this.username).sort((a, b) => b.downloads - a.downloads);
                 }
             },
             watch: {
@@ -207,16 +210,18 @@ class DevlToolComponent {
                 <h1>Developer Tools</h1>
                 <div style="margin: 12px 0 5px">
                     <span>username:</span>
-                    <input v-model="username"/>
-                    <button v-on:click="update">Save</button>
+                    <input class="b3-input" style="margin: 0 12px;" v-model="username"/>
+                    <button class="b3-button" v-on:click="update">Save</button>
                 </div>
                 <div style="display: flex; flex-wrap: wrap;">
                     <h2 style="margin: 12px 0 5px; width: 100%">Repos</h2>
                     <div style="margin: 6px 0; width: 100%">Total Downloads: {{total}}</div>
+                    <div style="margin: 6px 0; width: 100%">Total Count: {{ namedUserRepos.length }}</div>
                     <div class="user-repo-container">
+                        
                         <template v-for="p in namedUserRepos">
                             <div class="user-repo">
-                                <div><dt>Name:&nbsp</dt><dd style="display: inline-block"><a :href="p.package.url" target="_blank">{{p.package.name}}</a></dd></div>
+                                <div><dt>Name:&nbsp</dt><dd style="display: inline-block"><a :href="p.package.url" target="_blank">{{p.package.displayName['zh_CN'] || p.package.displayName['default'] || p.package.name}}</a></dd></div>
                                 <div v-if="!username"><dt>Username:&nbsp</dt><dd style="display: inline-block">{{p.username}}</dd></div>
                                 <div><dt>Type:&nbsp</dt><dd :style="getStyle(p.type)">{{p.type}}</dd></div>
                                 <div><dt>Download:&nbsp</dt><dd style="display: inline-block">{{p.downloads}}</dd></div>
@@ -228,7 +233,7 @@ class DevlToolComponent {
                 <div style="margin: 12px 0 5px">
                     <h2>Rank</h2>
                     <div>
-                        <button v-for="t in types" @click="selectedRankType = t">{{t}}</button>
+                        <button class="b3-button" style="margin-right: 8px" v-for="t in types" @click="selectedRankType = t">{{t}}</button>
                     </div>
                     <div id="echarts" ref="echarts" style="width: 100%; height: 400px"></div>
                 </div>
