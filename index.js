@@ -194,10 +194,14 @@ class DevlToolComponent {
                     return this.namedUserRepos.reduce((a, i) => (i.downloads || 0) + a, 0);
                 },
                 namedUserRepos() {
-                    if (!this.username) {
-                        return this.userRepos.sort((a, b) => b.downloads - a.downloads);
+                    let result = this.userRepos;
+                    if (this.username) {
+                        result = result.filter((v) => v.username === this.username);
                     }
-                    return this.userRepos.filter((v) => v.username === this.username).sort((a, b) => b.downloads - a.downloads);
+                    if (this.selectedRankType !== 'all') {
+                        result = result.filter((v) => v.type === this.selectedRankType);
+                    }
+                    return result.sort((a, b) => b.downloads - a.downloads);
                 }
             },
             watch: {
@@ -212,6 +216,9 @@ class DevlToolComponent {
                     <span>username:</span>
                     <input class="b3-input" style="margin: 0 12px;" v-model="username"/>
                     <button class="b3-button" v-on:click="update">Save</button>
+                </div>
+                <div>
+                    <button class="b3-button" style="margin-right: 8px" v-for="t in types" @click="selectedRankType = t">{{t}}</button>
                 </div>
                 <div style="display: flex; flex-wrap: wrap;">
                     <h2 style="margin: 12px 0 5px; width: 100%">Repos</h2>
@@ -232,9 +239,7 @@ class DevlToolComponent {
                 </div>
                 <div style="margin: 12px 0 5px">
                     <h2>Rank</h2>
-                    <div>
-                        <button class="b3-button" style="margin-right: 8px" v-for="t in types" @click="selectedRankType = t">{{t}}</button>
-                    </div>
+                    
                     <div id="echarts" ref="echarts" style="width: 100%; height: 400px"></div>
                 </div>
             </div>
@@ -244,7 +249,7 @@ class DevlToolComponent {
 }
 
 
-module.exports = class OpenMd extends Plugin {
+module.exports = class DevToolPlugin extends Plugin {
     onload() {
         this.devtoolComponent = new DevlToolComponent(this);
         this.loadConfig();
