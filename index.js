@@ -1,5 +1,7 @@
 const { Plugin, openTab, Menu } = require('siyuan');
 
+const TAB_TYPE = 'devtool-plugin';
+
 const version = window.siyuan.config.system.kernelVersion;
 
 const addScriptSync = (path, id) => {
@@ -55,7 +57,7 @@ class VersionManager {
                 ...p,
                 username: author,
                 type: p.type,
-                downloads: this.downloadCounts[reponame].downloads,
+                downloads: this.downloadCounts[reponame]?.downloads || 0,
             }
         });
     }
@@ -303,17 +305,19 @@ module.exports = class DevToolPlugin extends Plugin {
     showDevTool() {
         let component = this.devtoolComponent;
         const tab = this.addTab({
-            type: `devtool-plugin`,
+            type: TAB_TYPE,
             init() {
                 component.init(this.element);
             }
         });
         openTab({
+            app: this.app,
             custom: {
                 icon: '',
                 title: 'Siyuan开发者工具',
                 data: {},
-                fn: tab,
+                id: this.name + TAB_TYPE,
+                // fn: tab,
             },
         });
     }

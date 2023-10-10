@@ -2,7 +2,8 @@
     "name": "siyuan-plugin-devtool",
     "author": "zuoez02",
     "url": "https://github.com/zuoez02/siyuan-plugin-devtools",
-    "version": "0.1.8",
+    "version": "0.1.9",
+    "minAppVersion": "2.10.9",
     "displayName": {
         "default": "Developer Tools"
     },
