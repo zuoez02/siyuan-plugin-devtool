@@ -1,7 +1,6 @@
 const { Plugin, openTab, Menu, getFrontend } = require('siyuan');
 
 const TAB_TYPE = 'devtool-plugin';
-
 const version = window.siyuan.config.system.kernelVersion;
 
 const addScriptSync = (path, id) => {
