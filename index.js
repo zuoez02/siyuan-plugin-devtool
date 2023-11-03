@@ -1,4 +1,6 @@
-const { Plugin, openTab, Menu } = require('siyuan');
+const { Plugin, openTab, Menu, getFrontend } = require('siyuan');
+
+const TAB_TYPE = 'devtool-plugin';
 
 const version = window.siyuan.config.system.kernelVersion;
 
@@ -55,7 +57,7 @@ class VersionManager {
                 ...p,
                 username: author,
                 type: p.type,
-                downloads: this.downloadCounts[reponame].downloads,
+                downloads: this.downloadCounts[reponame]?.downloads || 0,
             }
         });
     }
@@ -250,11 +252,21 @@ class DevlToolComponent {
 
 
 module.exports = class DevToolPlugin extends Plugin {
-    onload() {
-        this.devtoolComponent = new DevlToolComponent(this);
-        this.loadConfig();
-        this.registerTopbarIcon();
+    isMobile = false;
 
+    onload() {
+        const frontEnd = getFrontend();
+        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
+
+        this.devtoolComponent = new DevlToolComponent(this);
+        this.loadConfig().then(() => {
+            if (this.config.vconsole) {
+                this.toggleVconsole(this.config.vconsole);
+            }
+        });
+
+        this.registerTopbarIcon();
+      
         this.addCommand({
             langKey: "reload",
             hotkey: "⇧⌘R",
@@ -298,22 +310,49 @@ module.exports = class DevToolPlugin extends Plugin {
             y: rect.bottom,
             isLeft: true,
         });
+        if (true) {
+            menu.addItem({
+                icon: "iconBug",
+                label: "vConsole",
+                click: () => {
+                    this.toggleVconsole();
+                    this.saveConfig();
+                }
+            })
+        }
+    }
+
+    toggleVconsole(initial) {
+        addScriptSync("/plugins/siyuan-plugin-devtool/vconsole.min.js", "vconsole");
+        if (initial === false) {
+            return;
+        }
+        if (this.VConsole) {
+            this.VConsole.destroy();
+            this.VConsole = null;
+            this.config.vconsole = false;
+        } else {
+            this.VConsole = new window.VConsole();
+            this.config.vconsole = true;
+        }
     }
 
     showDevTool() {
         let component = this.devtoolComponent;
         const tab = this.addTab({
-            type: `devtool-plugin`,
+            type: TAB_TYPE,
             init() {
                 component.init(this.element);
             }
         });
         openTab({
+            app: this.app,
             custom: {
                 icon: '',
                 title: 'Siyuan开发者工具',
                 data: {},
-                fn: tab,
+                id: this.name + TAB_TYPE,
+                // fn: tab,
             },
         });
     }
@@ -331,7 +370,8 @@ module.exports = class DevToolPlugin extends Plugin {
         this.config = await this.loadData('config.json');
         if (!this.config) {
             this.config = {
-                'username': ''
+                'username': '',
+                'vconsole': false,
             };
             this.saveConfig();
         } else {
