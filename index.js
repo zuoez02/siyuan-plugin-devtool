@@ -50,7 +50,7 @@ class VersionManager {
 
     getUserRepos() {
         return [...this.plugins, ...this.templates, ...this.themes, ...this.widgets].map((p) => {
-            const reponame = p.url.split('@')[0];
+            const reponame = p?.url.split('@')[0];
             const author = reponame.split('/')[0];
             return {
                 ...p,
@@ -94,6 +94,7 @@ class DevlToolComponent {
     init(el) {
         this.addVue();
         this.el = el;
+        this.setUsername(this.plugin.config.username);
         this.mountEl();
     }
 
@@ -102,8 +103,7 @@ class DevlToolComponent {
     }
 
     updateUsername(username) {
-        this.username = username;
-        this.plugin.setUsername(this.username);
+        this.plugin.setUsername(username);
     }
 
     addVue() {
@@ -119,7 +119,6 @@ class DevlToolComponent {
                     vm: new VersionManager(),
                     echart: null,
                     username: c.username || '',
-                    tempUsername: c.username || '',
                     userRepos: [],
                     selectedRankType: 'all',
                     types: ['all', 'plugin', 'template', 'widget', 'theme']
@@ -172,10 +171,7 @@ class DevlToolComponent {
                     this.updateEcharts();
                 },
                 async update() {
-                    c.updateUsername(this.tempUsername);
-                    this.username = this.tempUsername;
-                    const result = await this.vm.getUserRepos(this.username);
-                    this.userRepos = result;
+                    c.updateUsername(this.username);
                 },
                 getStyle(type) {
                     return {
@@ -185,7 +181,7 @@ class DevlToolComponent {
                         ],
                         border: '0',
                         borderRadius: '4px',
-                        padding: '4px 2px',
+                        padding: '2px 4px',
                         display: 'inline-block',
                     }
                 }
@@ -228,7 +224,7 @@ class DevlToolComponent {
                     <div class="user-repo-container">
                         
                         <template v-for="p in namedUserRepos">
-                            <div class="user-repo">
+                            <div class="user-repo" v-if="p.package">
                                 <div><dt>Name:&nbsp</dt><dd style="display: inline-block"><a :href="p.package.url" target="_blank">{{p.package.displayName['zh_CN'] || p.package.displayName['default'] || p.package.name}}</a></dd></div>
                                 <div v-if="!username"><dt>Username:&nbsp</dt><dd style="display: inline-block">{{p.username}}</dd></div>
                                 <div><dt>Type:&nbsp</dt><dd :style="getStyle(p.type)">{{p.type}}</dd></div>
@@ -264,6 +260,8 @@ module.exports = class DevToolPlugin extends Plugin {
             }
         });
 
+        this.addIcons(`<symbol id="iconDevtools" viewBox="0 0 1024 1024"><path d="M824.85 549.87c-22.72 0-43.23-8.24-59.5-21.41-2.05-1.2-253.51-251.47-253.51-251.47L264.24 524.6c-1.16 1.09-2.6 1.64-3.86 2.56-16.53 13.96-37.57 22.72-60.86 22.72-33.37 0-62.53-17.35-79.39-43.4 10.15 3.29 20.82 5.51 32.06 5.51 35.5 0 64.31-23.99 86.33-44.97 0 0 237.61-233.56 239.28-234.64-8.17-8.51-13.24-19.99-13.24-32.73 0-26.12 21.19-47.29 47.29-47.29 26.18 0 47.38 21.17 47.38 47.29 0 12.74-5.12 24.22-13.25 32.69 1.65 1.12 240.81 236.24 240.81 236.24 16.97 17.09 49.83 44.1 85.18 44.1 11.2 0 21.81-2.22 31.93-5.45-16.8 25.65-45.82 42.64-79.05 42.64zM227.94 814.83h28.38V597.18c0-10.92 255.52-265.02 255.52-265.02S767.4 586.22 767.4 597.18v217.65h28.42c15.66 0 28.36 12.75 28.36 28.39 0 15.72-12.7 28.44-28.36 28.44H227.94c-15.7 0-28.42-12.72-28.42-28.44-0.01-15.65 12.74-28.39 28.42-28.39z m283.89-246.09c26.18 0 47.38-21.18 47.38-47.3 0-26.13-21.19-47.31-47.38-47.31-26.1 0-47.29 21.18-47.29 47.31 0 26.12 21.19 47.3 47.29 47.3z m0 0" p-id="6712"></path></symbol>`)
+
         this.registerTopbarIcon();
       
         this.addCommand({
@@ -274,12 +272,19 @@ module.exports = class DevToolPlugin extends Plugin {
             }
         });
 
+        let component = this.devtoolComponent;
+        this.addTab({
+            type: TAB_TYPE,
+            init() {
+                component.init(this.element);
+            }
+        });
     }
 
     registerTopbarIcon() {
         const topBarElement = this.addTopBar({
-            title: 'Siyuan开发者工具',
-            icon: 'iconBug',
+            title: this.i18n.title,
+            icon: 'iconDevtools',
             position: 'right',
             callback: () => {
                 let rect = topBarElement.getBoundingClientRect();
@@ -296,14 +301,29 @@ module.exports = class DevToolPlugin extends Plugin {
         const menu = new Menu("siyuanPluginDevtool");
         menu.addItem({
             icon: "iconRefresh",
-            label: "重载",
+            label: this.i18n.reload,
             click: () => window.location.reload(),
         });
+        if (window.require) {
+            menu.addItem({
+                icon: 'iconFolder',
+                label: this.i18n.openPluginFolder,
+                click: () => this.showPluginFolder(),
+            });
+        }
         menu.addItem({
-            icon: "iconBug",
-            label: "开发者工具",
+            icon: "iconDevtools",
+            label: this.i18n.developerPanel,
             click: () => this.showDevTool(),
         });
+        menu.addSeparator();
+        if (window.require) {
+            menu.addItem({
+                icon: 'iconBug',
+                label: this.i18n.openElectronDevTools,
+                click: () => this.openElectronDevTools(),
+            })
+        }
         menu.open({
             x: rect.right,
             y: rect.bottom,
@@ -312,7 +332,7 @@ module.exports = class DevToolPlugin extends Plugin {
         if (true) {
             menu.addItem({
                 icon: "iconBug",
-                label: "vConsole",
+                label: this.i18n.vConsole,
                 click: () => {
                     this.toggleVconsole();
                     this.saveConfig();
@@ -337,23 +357,34 @@ module.exports = class DevToolPlugin extends Plugin {
     }
 
     showDevTool() {
-        let component = this.devtoolComponent;
-        const tab = this.addTab({
-            type: TAB_TYPE,
-            init() {
-                component.init(this.element);
-            }
-        });
         openTab({
             app: this.app,
             custom: {
-                icon: '',
-                title: 'Siyuan开发者工具',
+                icon: 'iconDevtools',
+                title: this.i18n.developerPanel,
                 data: {},
                 id: this.name + TAB_TYPE,
-                // fn: tab,
             },
         });
+    }
+
+    openElectronDevTools() {
+        if (!window.require) {
+            return;
+        }
+        const remote = window.require('@electron/remote');
+        remote?.getCurrentWindow().webContents.openDevTools()
+    }
+
+    showPluginFolder() {
+        if (!window.require) {
+            return;
+        }
+        const path = window.require('path');
+        const {shell} = window.require('@electron/remote') // deconstructing assignment
+        const absPath = path.join(window.siyuan.config.system.workspaceDir, 'data', 'plugins')
+        // shell.showItemInFolder(absPath);
+        shell.openExternal(absPath);
     }
 
     async setUsername(username) {

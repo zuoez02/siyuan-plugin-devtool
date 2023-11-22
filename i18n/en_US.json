@@ -1,3 +1,8 @@
 {
-    "reload": "Reload Window"
+    "title": "Siyuan DevTools",
+    "reload": "Reload window",
+    "openPluginFolder": "Open Plugin folder",
+    "developerPanel": "Developer Panel",
+    "vConsole": "Toggle vConsole",
+    "openElectronDevTools": "Open Devtools"
 }

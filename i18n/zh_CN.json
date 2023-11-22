@@ -1,3 +1,8 @@
 {
-    "reload": "重载窗口"
+    "title": "开发者工具",
+    "reload": "重载窗口",
+    "openPluginFolder": "打开插件目录",
+    "developerPanel": "集市统计面板",
+    "vConsole": "切换显示vConsole",
+    "openElectronDevTools": "打开桌面端开发者工具"
 }

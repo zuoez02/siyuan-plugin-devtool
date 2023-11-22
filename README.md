@@ -1,7 +1,16 @@
 # Plugin Devtools
 
-思源开发者工具集合
+## Quick Menu
 
-1. 开发者本人Repo下载统计
-2. 下载量趋势图
-3. vConsole调试器，适用于移动端开发
++ Reload: Reload window.
++ Open Plugin folder: Open the plugin folder in file browser or finder.
++ Developer Panel: Show marketplace resources and charts.
++ vConsole: Toggle vConsole(a crossplatform console for mobile debug).
++ Open Devtools: Show electron devtools.
+
+## Developer Panel
+
++ Show all types of third party marketplace resources.
++ You can filter username to check one developer's resources.
++ Filter by types.
++ Show chart for developer's resources download ranks.
