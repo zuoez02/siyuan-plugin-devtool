@@ -386,7 +386,7 @@ module.exports = class DevToolPlugin extends Plugin {
         const {shell} = window.require('@electron/remote') // deconstructing assignment
         const absPath = path.join(window.siyuan.config.system.workspaceDir, 'data', 'plugins')
         // shell.showItemInFolder(absPath);
-        shell.openExternal(absPath);
+        shell.openExternal('file://' + encodeURI(absPath));
     }
 
     async setUsername(username) {
