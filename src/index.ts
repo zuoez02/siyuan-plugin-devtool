@@ -39,7 +39,7 @@ export default class DevtoolPlugin extends Plugin {
             }
         });
 
-        const username = this.config.username;
+        const plugin = this;
 
         this.addTab({
             type: TAB_TYPE,
@@ -47,9 +47,12 @@ export default class DevtoolPlugin extends Plugin {
                 new Tab({
                     target: this.element,
                     props: {
-                        username,
-
+                        username: plugin.config.username,
+                        plugin,
                     }
+                }).$on('update', (e) => {
+                    console.log(e.detail);
+                    plugin.setUsername(e.detail)
                 })
             }
         });

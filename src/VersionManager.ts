@@ -46,6 +46,7 @@ export class VersionManager {
                 username: author,
                 type: p.type,
                 downloads: this.downloadCounts[reponame]?.downloads || 0,
+                icon: `https://oss.b3logfile.com/package/${p.url}/icon.png`,
             }
         });
     }

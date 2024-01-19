@@ -11,6 +11,8 @@
 }
 .user-repo-container {
     margin: 0 -8px;
+    display: flex;
+    flex-wrap: wrap;
 }
 .user-repo {
     margin: 12px 8px;
@@ -18,5 +20,12 @@
     border: 1px solid var(--b3-theme-background-light);;
     border-radius: 4px;
     padding: 12px;
-    display: inline-block;
+}
+.user-repo:hover {
+    // border-color: var(--b3-theme-primary);
+    box-shadow: 0 0 9px 0px var(--b3-theme-primary);
+}
+.user-repo-icon {
+    height: 100px;
+    width: 100px;
 }
