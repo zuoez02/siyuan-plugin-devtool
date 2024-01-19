@@ -110,8 +110,9 @@
 </script>
 
 <div class="devtool-plugin-tab" style="padding: 12px">
-  <h1>Developer Tools</h1>
-  <div style="margin: 12px 0 5px">
+  <h1>
+    <svg style="height: 44px;width: 44px;position: relative;top: 12px;margin-right: 8px;"><use xlink:href="#iconDevtools"></use></svg>{plugin.i18n.title}</h1>
+    <div style="margin: 12px 0 5px">
     <span>username:</span>
     <input class="b3-input" style="margin: 0 12px;" bind:value={username} />
     <button class="b3-button" on:click={() => update()}>Save</button>
