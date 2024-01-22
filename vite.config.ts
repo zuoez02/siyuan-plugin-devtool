@@ -38,6 +38,14 @@ export default defineConfig({
                 {
                     src: "./src/i18n",
                     dest: "./",
+                },
+                {
+                    src: './icon.png',
+                    dest: './',
+                },
+                {
+                    src: './preview.png',
+                    dest: './',
                 }
             ],
         }),
